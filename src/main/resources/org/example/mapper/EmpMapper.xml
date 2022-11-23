@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.mapper.EmpMapper">
+    <!--需要先使用resultMap标签来设置映射关系-->
+    <!--id是resultMap标签的id号,自定义即可-->
+    <!--因为要处理Emp类型的映射关系,故type为Emp-->
+    <resultMap id="empResultMap" type="Emp">
+        <id property="eid" column="eid"/>
+        <!--id专门用来设置主键上的映射关系-->
+        <result property="empName" column="emp_name"/>
+        <!--result来设置普通字段的映射关系-->
+        <result property="age" column="age"/>
+        <result property="sex" column="sex"/>
+        <result property="empName" column="empName"/>
+        <!--如果使用了resultMap,则所有的字段名都要设置-->
+    </resultMap>
+    <!--List<Emp>getAllEmp();-->
+    <select id="getAllEmp" resultMap="empResultMap">
+        select * from tb_emp;
+    </select>
+    <!--Emp getEmpAndDept(@Param("eid") Integer eid);-->
+    <resultMap id="empAndDeptResultMapOne" type="Emp">
+        <id property="eid" column="eid"/>
+        <result property="empName" column="emp_name"/>
+        <result property="age" column="age"/>
+        <result property="sex" column="sex"/>
+        <result property="email" column="email"/>
+        <!--使用级联属性赋值-->
+        <result property="dept.did" column="did"/>
+        <result property="dept.deptName" column="dept_name"/>
+    </resultMap>
+    <resultMap id="empAndDeptResultMapTwo" type="Emp">
+        <id property="eid" column="eid"/>
+        <result property="empName" column="emp_name"/>
+        <result property="age" column="age"/>
+        <result property="sex" column="sex"/>
+        <result property="email" column="email"/>
+        <!--association标签专门用来处理级联映射-->
+        <association property="dept" javaType="Dept">
+            <!--property是指Emp实体类中的dept属性,javaType是指dept在java中的代表的类-->
+            <id property="did" column="did"/>
+            <result property="deptName" column="dept_name"/>
+        </association>
+        <!--此时即可获取完整的Emp对象-->
+    </resultMap>
+    <select id="getEmpAndDept" resultMap="empAndDeptResultMapTwo">
+        select * from tb_emp left join tb_dept on tb_emp.did=tb_dept.did where tb_emp.eid=#{eid};
+    </select>
+    <!--Emp getEmpAndDeptByStepOne(@Param("eid") Integer eid);-->
+    <resultMap id="empAndDeptByStepResultMap" type="Emp">
+        <id property="eid" column="eid"/>
+        <result property="empName" column="emp_name"/>
+        <result property="age" column="age"/>
+        <result property="sex" column="sex"/>
+        <result property="email" column="email"/>
+        <association property="dept" select="org.example.mapper.DeptMapper.getEmpAndDeptByStepTwo" column="did" fetchType="lazy"/>
+        <!--column是分步查询的条件-->
+    </resultMap>
+    <select id="getEmpAndDeptByStepOne" resultMap="empAndDeptByStepResultMap">
+        select * from tb_emp where eid=#{eid};
+    </select>
+    <!--List<Emp>getDeptAndEmpByStepTwo(@Param("did") Integer did);-->
+    <select id="getDeptAndEmpByStepTwo" resultType="Emp">
+        select * from tb_emp where did=#{did};
+    </select>
+</mapper>

@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.mapper.DynamicSQLMapper">
+    <!--List<Emp>getEmpByCondition(@Param("emp") Emp emp);-->
+    <select id="getEmpByCondition" resultType="Emp">
+        select * from tb_emp
+        <trim prefix="where" suffix="" suffixOverrides="and|or" prefixOverrides="">
+            <!--
+                trim标签
+                    属性:
+                        (1)prefix/suffix:将trim标签中内容前/后添加指定内容
+                        (2)prefixOverrides/suffixOverrides:将trim标签中内容前/后去掉指定内容
+            -->
+            <if test="empName != null and empName != ''">
+                emp_name=#{empName} and
+            </if>
+            <if test="age != null and age != ''">
+                age=#{age} and
+            </if>
+            <if test="sex != null and sex != ''">
+                sex=#{sex} and
+            </if>
+            <if test="email != null and email != ''">
+                email=#{email}
+            </if>
+        </trim>
+    </select>
+    <!--List<Emp>getEmpByCondition(@Param("emp") Emp emp);-->
+    <select id="getEmpByConditionTwoByWhere" resultType="Emp">
+        select * from tb_emp
+        <where>
+            <if test="empName != null and empName != ''">
+                and emp_name=#{empName}
+                <!--若成立,此句将会被拼接到where之后-->
+            </if>
+            <if test="age != null and age != ''">
+                and age=#{age}
+            </if>
+            <if test="sex != null and sex != ''">
+                and sex=#{sex}
+            </if>
+            <if test="email != null and email != ''">
+                and email=#{email}
+            </if>
+        </where>
+    </select>
+    <!--List<Emp>getEmpByCondition(@Param("emp") Emp emp);-->
+    <select id="getEmpByConditionOneByIf" resultType="Emp">
+        select * from tb_emp where 1=1
+        <!--直接写传递来的Emp对象的属性即可,不用写#{}或${}-->
+        <if test="empName != null and empName != ''">
+            and emp_name=#{empName}
+            <!--若成立,此句将会被拼接到where之后-->
+        </if>
+        <if test="age != null and age != ''">
+            and age=#{age}
+        </if>
+        <if test="sex != null and sex != ''">
+            and sex=#{sex}
+        </if>
+        <if test="email != null and email != ''">
+            and email=#{email}
+        </if>
+    </select>
+    <!--List<Emp>getEmpByChoose(Emp emp);-->
+    <select id="getEmpByChoose" resultType="Emp">
+        select * from tb_emp
+        <where>
+            <choose>
+                <when test="empName != null and empName != ''">
+                    emp_name=#{empName}
+                </when>
+                <when test="age != null and age != ''">
+                    emp_name=#{empName}
+                </when>
+                <when test="sex != null and sex != ''">
+                    emp_name=#{empName}
+                </when>
+                <when test="email != null and email != ''">
+                    emp_name=#{empName}
+                </when>
+                <!--对于if...else if...else...的结构,当有一个满足时,其他的就不会再去判断,故而亦不需要加上and-->
+                <otherwise>
+                    did=1
+                    <!--如果条件都不满足就查询did为1的员工信息-->
+                </otherwise>
+            </choose>
+        </where>
+    </select>
+    <!--int deleteMoreByArray(Integer[] eids);-->
+    <delete id="deleteMoreByArray">
+        delete from tb_emp where eid in (
+        <foreach collection="eids" item="eid" separator=",">
+            #{eid}
+            <!--foreach相当于遍历并对SQL语句进行拼接,注意,此处不论是前面加","还是后面加","都会冗余一个逗号,故而可以使用separator标签-->
+            <!--MyBatis会将参数自动放在一个Map当中,若不使用@Param,则会报错:
+                Parameter 'eids' not found. Available parameters are [array, arg0],因为数组是由固定访问方式的,不能通过foreach来访问.
+                故而,需要使用@Param来避免数组被MyBatis放入集合中.
+            -->
+        </foreach>
+        <!--item表示被遍历的集合/数组中的每一个元素-->
+        )
+    </delete>
+    <!--int insertMoreByList(List<Emp>emps);-->
+    <insert id="insertMoreByList">
+        insert into tb_emp values
+        <foreach collection="emps" item="emp" separator=",">
+            (null,#{emp.empName},#{emp.age},#{emp.sex},#{emp.email},null)
+            <!--不能使用open和close,二者是在整个语句上加上"("和")",此处应当是么米一个value都加上"("与")".-->
+        </foreach>
+    </insert>
+</mapper>
